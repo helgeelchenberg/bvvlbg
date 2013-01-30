@@ -42,7 +42,7 @@ if(-e $xml){
 	open(OXML, "< :encoding(UTF-8)", $xml);
 	while(<OXML>){
 		my $line = $_;
-		if ($line =~ m/<link href=".*?" title="(\d*?)"\/>.*?<updated>(\S{20})<\/updated>/sg){
+		if ($line =~ m/<link href=".*?" title="(.*?)"\/>.*?<updated>(.{20})<\/updated>/sg){
 			my $id = $1;
 			my $date = $2;
 			$padrev0{$id} = $date;
@@ -111,9 +111,11 @@ $feedentries[0] = "<feed>\n";
 # Padliste nach allen Pads durchsuchen, die öffentlich sind und bearbeitet
 # wurden und die entsprechenden Zeilen der Tabelle weiterverarbeiten.
 my $uuid;
-while (($source =~ m/(<tr id="padmeta-\d*?">.*?public\.gif.*?<\/tr.*?>)/sg)
+while (($source =~ m/(<tr id="padmeta-.*?">.*?<\/tr.*?>)/sg)
         && ($1 !~ m/<td class="lastEditedDate">never<\/td>/s)){
 	my $padsrc = $1;
+	# Pads ignorieren, die nicht öffentlich sind.
+	unless ($padsrc =~ m/public\.gif/){ $padsrc = "";}
 	if($padsrc =~ m/id="padmeta-(.*?)"><.*?><a href="(.*?)">(.*?)<\/a>/){
 		my $padid = $1;
 		my $url = $2; # Nur ein relativer Pfad.
@@ -246,7 +248,8 @@ while($i < $entrycount){
 		elsif($feedentries[$i] =~ m/(ausschuss|vorstand|aeltestenrat|ältestenrat|auschuss|aussschuss)/i){
 			print XMLA $feedentries[$i];
 		}
-		elsif($feedentries[$i] =~ m/(antrag|anfrage|anträge|antraege)/i){
+		elsif(($feedentries[$i] =~ m/(antrag|anfrage|anträge|antraege)/i) 
+			&& ($feedentries[$i] !~ m/(how-to|howto)/i)){
 			print XMLI $feedentries[$i];
 		}
 		else{
